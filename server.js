@@ -18,13 +18,65 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
+// --------------- LIST PROJECTS ROUTES start ------------------------------
+app.get("/timestamp", (req, res) => {
+  res.sendFile(__dirname + '/views/timestamp.html');
+});
+
+app.get("/requestHeaderParserMicroservice", (req, res) => {
+  res.sendFile(__dirname + '/views/requestHeaderParserMicroservice.html');
+});
 
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
+// --------------- LIST PROJECTS ROUTES end --------------------------------
 
 
+// ---------------------- TIMESTAMP start ----------------------------------
+app.get("/api/timestamp", (req, res) => {
+  const currentTime = new Date();
+  res.json({
+    "unix": currentTime.getTime(),
+    "utc": currentTime.toUTCString()
+  })
+});
+
+app.get("/api/timestamp/:date_string", (req, res) => {
+  const dateString = req.params.date_string;
+  const newDateStringFormat = new Date(dateString);
+  const convertUnix = new Date(parseInt(dateString));
+
+  if (/\d{10,}/g.test(dateString)) {
+    res.json({
+      "unix": convertUnix.getTime(),
+      "utc": convertUnix.toUTCString()
+    })
+  }
+
+  if (newDateStringFormat == "Invalid Date") {
+    res.json({"error": "Invalid Date"});
+  } else {
+    res.json({
+      "unix": newDateStringFormat.getTime(),
+      "utc": newDateStringFormat.toUTCString()
+    })
+  }
+});
+// ---------------------- TIMESTAMP end ----------------------------------
+
+// ---------------------- HEADER PARSER start ----------------------------
+app.get("/api/whoami", (req, res) => {
+  console.log(req, " <= this is req")
+  res.json({
+    "ipaddress": "hello",
+    "language": "en",
+    "software": "1"
+  });
+});
+
+// ---------------------- HEADER PARSER end ------------------------------
 
 // listen for requests :)
 var listener = app.listen(process.env.PORT, function () {
