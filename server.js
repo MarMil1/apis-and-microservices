@@ -11,7 +11,18 @@ var shortId = require('shortid');
 var app = express();
 var port = process.env.PORT || 3000;
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
+const serverOptions = {
+  poolSize: 100,
+  socketOptions: {
+    socketTimeoutMS: 6000000
+  }
+};
+
+mongoose.connect(process.env.MONGO_URI, { 
+  useNewUrlParser: true, 
+  useUnifiedTopology: true,
+  server: serverOptions
+});
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
