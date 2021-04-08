@@ -1,10 +1,17 @@
+require('dotenv').config();
 // server.js
 // where your node app starts
 
 // init project
 var express = require('express');
+var mongo = require('mongodb');
+var mongoose = require('mongoose');
+var shortId = require('shortid');
+
 var app = express();
 var port = process.env.PORT || 3000;
+
+mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true });
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC 
@@ -13,6 +20,7 @@ app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 20
 
 // http://expressjs.com/en/starter/static-files.html
 app.use(express.static('public'));
+//app.use('/public', express.static(`${process.cwd()}/public`));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
@@ -26,6 +34,10 @@ app.get("/timestamp", (req, res) => {
 
 app.get("/requestHeaderParserMicroservice", (req, res) => {
   res.sendFile(__dirname + '/views/requestHeaderParserMicroservice.html');
+});
+
+app.get("/urlShortener", (req, res) => {
+  res.sendFile(__dirname + '/views/urlShortener.html');
 });
 
 // your first API endpoint... 
@@ -77,6 +89,51 @@ app.get("/api/whoami", (req, res) => {
 });
 
 // ---------------------- HEADER PARSER end ------------------------------
+
+// ---------------------- URL SHORTENER start ----------------------------
+// body-parser deprecated and replaced with express
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+const ShortURL = mongoose.model('ShortURL', new mongoose.Schema({
+  original_url: String,
+  short_url: String
+}));
+
+app.post("/api/shorturl/new/", function (req, res) {
+  const urlFromUser = req.body.url;
+  const shortenedUrl = shortId.generate();
+
+  if (!/^(http:\/\/)|(\.com)|(\.org)|(\.net)$/g.test(urlFromUser)) {
+    res.json({
+      "error": "invalid url"
+    });
+  } else {
+      const newUrl = new ShortURL({
+        "original_url": urlFromUser,
+        "short_url": shortenedUrl
+      });
+
+      newUrl.save((err, doc) => {
+        if (err) return console.log(err);
+
+        res.json({
+          "original_url": newUrl.original_url,
+          "short_url": newUrl.short_url
+        });
+      });
+  }
+});
+
+app.get("/api/shorturl/:short_url", (req, res) => {
+  let generatedShortUrl = req.params.short_url;
+  ShortURL.find({ short_url: generatedShortUrl }).then((urls) => {
+    let redirectedUrl = urls[0];
+    res.redirect(redirectedUrl.original_url);
+  });
+});
+
+// ---------------------- URL SHORTENER end ----------------------------
 
 // listen for requests :)
 var listener = app.listen(port, function () {
