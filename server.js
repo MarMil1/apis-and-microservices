@@ -103,18 +103,24 @@ const ShortURL = mongoose.model('ShortURL', new mongoose.Schema({
 app.post("/api/shorturl/new/", function (req, res) {
   const urlFromUser = req.body.url;
   const shortenedUrl = shortId.generate();
+  console.log("inside of app.post(/api/shorturl/new/, ...)");
+  console.log(urlFromUser, "<= urlFromUser");
+  console.log(shortenedUrl, "<= shortenedUrl");
 
   if (!/^(http:\/\/)|(\.com)|(\.org)|(\.net)$/g.test(urlFromUser)) {
+    console.log("checked if invalid - before json");
     res.json({
       "error": "invalid url"
     });
+    console.log("checked if invalid - after json");
   } else {
       const newUrl = new ShortURL({
         "original_url": urlFromUser,
         "short_url": shortenedUrl
       });
-
+      console.log("before saving to database");
       newUrl.save((err, doc) => {
+        console.log("inside saving to database");
         if (err) return console.log(err);
 
         res.json({
@@ -122,6 +128,7 @@ app.post("/api/shorturl/new/", function (req, res) {
           "short_url": newUrl.short_url
         });
       });
+      console.log("after saving to database");
   }
 });
 
