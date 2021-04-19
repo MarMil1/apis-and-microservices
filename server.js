@@ -6,6 +6,8 @@ const mongoose = require('mongoose');
 const shortId = require('shortid');
 const ShortURL = require('./models/shorturl');
 const ExerciseUser = require('./models/exerciseUser');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 
 const app = express();
@@ -21,8 +23,8 @@ const cors = require('cors');
 app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
 
 // http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
-//app.use('/public', express.static(`${process.cwd()}/public`));
+//app.use(express.static('public'));
+app.use('/public', express.static(`${process.cwd()}/public`));
 
 // http://expressjs.com/en/starter/basic-routing.html
 app.get("/", function (req, res) {
@@ -44,6 +46,10 @@ app.get("/urlShortener", (req, res) => {
 
 app.get("/exerciseTracker", (req, res) => {
   res.sendFile(__dirname + '/views/exerciseTracker.html');
+});
+
+app.get("/fileMetadata", (req, res) => {
+  res.sendFile(__dirname + '/views/fileMetadata.html');
 });
 
 // your first API endpoint... 
@@ -336,6 +342,25 @@ app.get("/api/exercise/log/", (req, res) => {
 });
 
 // ---------------------- EXERCISE TRACKER end ----------------------------
+
+// ---------------------- FILE METADATA start ----------------------------
+app.get('/', (req, res) => {
+  res.sendFile(process.cwd() + '/views/fileMetadata.html');
+});
+
+app.post('/api/fileanalyse', upload.single('upfile'), (req, res) => {
+  if (req.file === undefined) {
+    res.send('There was an error. Try again.')
+  } else {
+    res.json({
+      "name": req.file.originalname,
+      "type": req.file.mimetype,
+      "size": req.file.size
+    });
+  }
+});
+
+// ---------------------- FILE METADATA end ----------------------------
 
 // listen for requests :)
 const listener = app.listen(port, function () {
